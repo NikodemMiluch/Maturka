@@ -1,0 +1,78 @@
+6.1
+SELECT perfumy_txt.nazwa_p 
+FROM perfumy_txt, sklad_txt 
+WHERE 
+	perfumy_txt.id_perfum = sklad_txt.id_perfum AND 	
+	sklad_txt.nazwa_skladnika = "absolut jasminu"
+
+6.2
+SELECT perfumy_txt.rodzina_zapachow, perfumy_txt.nazwa_p, perfumy_txt.cena 
+FROM perfumy_txt, 
+	(
+		SELECT rodzina_zapachow, MIN(cena) 
+		FROM perfumy_txt 
+		group by rodzina_zapachow) 
+	)
+	tabela 
+WHERE 
+	perfumy_txt.rodzina_zapachow = tabela.rodzina_zapachow AND
+	perfumy_txt.cena = tabela.`min(cena)`
+
+6.3
+SELECT DISTINCT marki_txt.nazwa_m
+FROM sklad_txt, perfumy_txt, marki_txt
+WHERE 
+	perfumy_txt.id_perfum = sklad_txt.id_perfum AND 
+	perfumy_txt.id_marki=marki_txt.id_marki AND 
+	sklad_txt.nazwa_skladnika 
+	NOT LIKE '%paczula%'
+	
+albo
+
+SELECT marki_txt.nazwa_m 
+FROM sklad_txt, perfumy_txt, marki_txt 
+WHERE
+	perfumy_txt.id_perfum = sklad_txt.id_perfum AND 
+	perfumy_txt.id_marki=marki_txt.id_marki 
+	AND sklad_txt.nazwa_skladnika 
+	NOT IN (
+			SELECT DISTINCT sklad_txt.nazwa_skladnika 
+			FROM sklad_txt 
+			WHERE 
+				nazwa_skladnika LIKE '%paczula%'
+		    ) 
+	GROUP by marki_txt.nazwa_m ORDER BY nazwa_m ASC
+	
+	albo 
+	
+SELECT marki_txt.nazwa_m 
+from marki_txt 
+where nazwa_m
+not in(
+Select DISTINCT marki_txt.nazwa_m 
+from `perfumy_txt`, marki_txt,sklad_txt
+Where marki_txt.id_marki = perfumy_txt.id_marki
+and perfumy_txt.id_perfum = sklad_txt.id_perfum
+and sklad_txt.nazwa_skladnika like "%paczula%")
+	
+6.4
+
+SELECT perfumy_txt.nazwa_p, (cena*0.85) as "Cena"
+FROM `marki_txt`,perfumy_txt 
+WHERE 
+marki_txt.id_marki = perfumy_txt.id_marki
+and marki_txt.nazwa_m = "Mou De Rosine"
+and perfumy_txt.rodzina_zapachow = "orientalno-drzewna"
+
+6.5
+
+SELECT DISTINCT nazwa_m, rodzina_zapachow 
+FROM perfumy_txt,
+(SELECT id_marki, nazwa_m, COUNT(rodzina_zapachow) AS "ilosc" 
+FROM 
+(SELECT DISTINCT marki_txt.id_marki, nazwa_m, rodzina_zapachow 
+FROM marki_txt, perfumy_txt 
+WHERE marki_txt.id_marki = perfumy_txt.id_marki) dd 
+GROUP BY nazwa_m) bb 
+WHERE bb.id_marki = perfumy_txt.id_marki 
+AND ilosc = 1
